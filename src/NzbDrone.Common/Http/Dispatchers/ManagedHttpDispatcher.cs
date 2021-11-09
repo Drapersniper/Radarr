@@ -57,6 +57,11 @@ namespace NzbDrone.Common.Http.Dispatchers
                 cts.CancelAfter(TimeSpan.FromSeconds(100));
             }
 
+            if (request.ContentData != null)
+            {
+                requestMessage.Content = new ByteArrayContent(request.ContentData);
+            }
+
             if (request.Headers != null)
             {
                 AddRequestHeaders(requestMessage, request.Headers);
@@ -68,18 +73,6 @@ namespace NzbDrone.Common.Http.Dispatchers
 
             try
             {
-                if (request.ContentData != null)
-                {
-                    var content = new ByteArrayContent(request.ContentData);
-                    content.Headers.Remove("Content-Type");
-                    if (request.Headers.ContentType.IsNotNullOrWhiteSpace())
-                    {
-                        content.Headers.Add("Content-Type", request.Headers.ContentType);
-                    }
-
-                    requestMessage.Content = content;
-                }
-
                 responseMessage = httpClient.Send(requestMessage, cts.Token);
             }
             catch (HttpRequestException e)
@@ -162,11 +155,10 @@ namespace NzbDrone.Common.Http.Dispatchers
                         webRequest.Headers.Connection.Add(header.Value);
                         break;
                     case "Content-Length":
-                        webRequest.Headers.Add("Content-Length", header.Value);
+                        AddContentHeader(webRequest, "Content-Length", header.Value);
                         break;
                     case "Content-Type":
-                        webRequest.Headers.Remove("Content-Type");
-                        webRequest.Headers.Add("Content-Type", header.Value);
+                        AddContentHeader(webRequest, "Content-Type", header.Value);
                         break;
                     case "Date":
                         webRequest.Headers.Remove("Date");
@@ -198,6 +190,18 @@ namespace NzbDrone.Common.Http.Dispatchers
                         break;
                 }
             }
+        }
+
+        private void AddContentHeader(HttpRequestMessage request, string header, string value)
+        {
+            var headers = request.Content?.Headers;
+            if (headers == null)
+            {
+                return;
+            }
+
+            headers.Remove(header);
+            headers.Add(header, value);
         }
     }
 }
