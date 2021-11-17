@@ -11,9 +11,9 @@ namespace NzbDrone.Core.Messaging.Commands
     public class CommandExecutor : IHandle<ApplicationStartedEvent>,
                                    IHandle<ApplicationShutdownRequested>
     {
-        private const int THREAD_UPPER_BOUND = 10;
+        private const int THREAD_UPPER_BOUND = 128;
         private const int THREAD_LOWER_BOUND = 2;
-        private const int THREAD_LIMIT = 2;
+        private const int THREAD_LIMIT = 16;
 
         private readonly Logger _logger;
         private readonly IServiceFactory _serviceFactory;
