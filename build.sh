@@ -1,5 +1,13 @@
 #! /usr/bin/env bash
 set -e
+MoveIntoFolder() {
+  cd /home/draper/RiderProjects/Radarr
+}
+MoveIntoFolder
+buildVersion=$(jq -r '.version' ./hotio/VERSION.json)
+RADARRVERSION=$(jq -r '.version' ./hotio/VERSION.json)
+BUILD_SOURCEBRANCHNAME=$(jq -r '.sbranch' ./hotio/VERSION.json)
+BUILD_NUMBER=$(echo "$buildVersion" | cut -d. -f4)
 
 outputFolder='_output'
 testPackageFolder='_tests'
@@ -13,6 +21,16 @@ ProgressStart()
 ProgressEnd()
 {
     echo "Finish '$1'"
+}
+
+FetchLatestVersion()
+{
+  MoveIntoFolder
+  echo "Updating Version from API"
+  cd ./hotio || return
+  ./update-digests.sh
+  ./update-versions.sh
+  MoveIntoFolder || return
 }
 
 UpdateVersionNumber()
@@ -279,6 +297,52 @@ PackageTests()
     ProgressEnd 'Creating Test Package'
 }
 
+BuildDocker()
+{
+    ProgressStart 'Building Docker Image'
+    VERSION=$(jq -r '.version' ./hotio/VERSION.json)
+    ARR_DISCORD_NOTIFIER_VERSION=$(jq -r '.arr_discord_notifier_version' ./hotio/VERSION.json)
+    SBRANCH=$(jq -r '.sbranch' ./hotio/VERSION.json)
+    UPSTREAM_IMAGE=$(jq -r '.upstream_image' ./hotio/VERSION.json)
+    UPSTREAM_DIGEST_AMD64=$(jq -r '.upstream_digest_amd64' ./hotio/VERSION.json)
+    BUILD_DATE=$(date)
+    docker build \
+    --build-arg "BUILD_DATE=$BUILD_DATE" \
+    --build-arg "VERSION=$VERSION" \
+    --build-arg "SBRANCH=$SBRANCH" \
+    --build-arg "UPSTREAM_IMAGE=$UPSTREAM_IMAGE" \
+    --build-arg "UPSTREAM_DIGEST_AMD64=$UPSTREAM_DIGEST_AMD64" \
+    --build-arg "ARR_DISCORD_NOTIFIER_VERSION=$ARR_DISCORD_NOTIFIER_VERSION" \
+    . \
+    -t "drapersniper/radarr:latest" \
+    -t "drapersniper/radarr:v$VERSION"
+    
+    ProgressEnd 'Building Docker Image'
+}
+PushDocker()
+{
+    ProgressStart 'Publishing Docker Images'
+
+    docker push drapersniper/radarr -a
+    
+    ProgressEnd 'Publishing Docker Images'
+}
+
+
+GitUpdate()
+{
+  MoveIntoFolder
+  git commit -a -m "Updating post build - VERSION=$buildVersion BRANCH=$BRANCH"
+  git push
+  git restore .
+
+}
+UpdateProject()
+{
+    MoveIntoFolder
+    git fetch
+    git pull --rebase --autostash
+}
 # Use mono or .net depending on OS
 case "$(uname -s)" in
     CYGWIN*|MINGW32*|MINGW64*|MSYS*)
@@ -352,6 +416,10 @@ case $key in
         FRONTEND=YES
         PACKAGES=YES
         LINT=YES
+        shift # past argument
+        ;;
+    --docker)
+        DOCKER=YES
         shift # past argument
         ;;
     *)    # unknown option
@@ -440,4 +508,12 @@ then
     BuildInstaller "net6.0" "win-x64"
     BuildInstaller "net6.0" "win-x86"
     RemoveInno
+fi
+
+if [ "$DOCKER" = "YES" ];
+then
+  UpdateHotioVersion
+  BuildDocker
+  PushDocker
+  GitUpdate
 fi

@@ -1,0 +1,8 @@
+[submodule "src/hotio"]
+	path = src/hotio
+	url = https://github.com/hotio/radarr
+	branch = nightly
+[submodule "hotio"]
+	path = hotio
+	url = https://github.com/hotio/radarr
+	branch = nightly
