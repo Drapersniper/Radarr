@@ -512,7 +512,6 @@ fi
 
 if [ "$DOCKER" = "YES" ];
 then
-  UpdateHotioVersion
   BuildDocker
   PushDocker
   GitUpdate
