@@ -3,7 +3,21 @@ set -e
 MoveIntoFolder() {
   cd /home/draper/RiderProjects/Radarr
 }
+UpdateProject()
+{
+    MoveIntoFolder
+    git fetch
+    git pull --rebase --autostash
+}
+
+UpdateFork()
+{
+  git fetch upstream
+  git rebase upstream/develop
+}
 MoveIntoFolder
+UpdateProject
+UpdateFork
 buildVersion=$(jq -r '.version' ./hotio/VERSION.json)
 RADARRVERSION=$(jq -r '.version' ./hotio/VERSION.json)
 BUILD_SOURCEBRANCHNAME=$(jq -r '.sbranch' ./hotio/VERSION.json)
@@ -338,12 +352,6 @@ GitUpdate()
   git push
   git restore .
 
-}
-UpdateProject()
-{
-    MoveIntoFolder
-    git fetch
-    git pull --rebase --autostash
 }
 # Use mono or .net depending on OS
 case "$(uname -s)" in
