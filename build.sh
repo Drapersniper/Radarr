@@ -7,19 +7,16 @@ UpdateProject()
 {
     MoveIntoFolder
     git fetch
-    git pull --rebase --autostash
-}
-
-UpdateFork()
-{
-  git fetch upstream
-  git rebase upstream/develop
+    git fetch upstream
+    git pull --rebase --autostash upstream develop
 }
 FetchLatestVersion()
 {
   MoveIntoFolder
   echo "Updating Version from API"
   cd ./hotio || return
+  chmod +x ./update-digests.sh
+  chmod +x ./update-versions.sh
   ./update-digests.sh
   ./update-versions.sh
   MoveIntoFolder || return
@@ -27,7 +24,6 @@ FetchLatestVersion()
 MoveIntoFolder
 FetchLatestVersion
 UpdateProject
-UpdateFork
 buildVersion=$(jq -r '.version' ./hotio/VERSION.json)
 RADARRVERSION=$(jq -r '.version' ./hotio/VERSION.json)
 BUILD_SOURCEBRANCHNAME=$(jq -r '.sbranch' ./hotio/VERSION.json)
