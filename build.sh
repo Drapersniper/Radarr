@@ -15,7 +15,17 @@ UpdateFork()
   git fetch upstream
   git rebase upstream/develop
 }
+FetchLatestVersion()
+{
+  MoveIntoFolder
+  echo "Updating Version from API"
+  cd ./hotio || return
+  ./update-digests.sh
+  ./update-versions.sh
+  MoveIntoFolder || return
+}
 MoveIntoFolder
+FetchLatestVersion
 UpdateProject
 UpdateFork
 buildVersion=$(jq -r '.version' ./hotio/VERSION.json)
@@ -35,16 +45,6 @@ ProgressStart()
 ProgressEnd()
 {
     echo "Finish '$1'"
-}
-
-FetchLatestVersion()
-{
-  MoveIntoFolder
-  echo "Updating Version from API"
-  cd ./hotio || return
-  ./update-digests.sh
-  ./update-versions.sh
-  MoveIntoFolder || return
 }
 
 UpdateVersionNumber()
