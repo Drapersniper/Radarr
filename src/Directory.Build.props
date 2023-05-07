@@ -67,7 +67,7 @@
     <Copyright>Copyright 2014-$([System.DateTime]::Now.ToString('yyyy')) radarr.video (GNU General Public v3)</Copyright>
     
     <!-- Should be replaced by CI -->
-    <AssemblyVersion>4.5.1.7218</AssemblyVersion>
+    <AssemblyVersion>4.5.1.7230</AssemblyVersion>
     <AssemblyConfiguration>nightly</AssemblyConfiguration>
     <NeutralLanguage>en</NeutralLanguage>
 
